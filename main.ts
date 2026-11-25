@@ -34,8 +34,11 @@ const WORD = "onomatopoeia";
 const MIN_CHARS = 1;
 const MAX_CHARS = 77;
 
-// Where the grader looks for the entry.
-const OUTPUT_DIR = "/output";
+// Where the grader looks for the entry. The sandbox mounts the
+// output directory at /output; an ENTRY_OUTPUT_DIR override exists
+// only so the program can be exercised locally without root, and
+// the grader's run never sets it.
+const OUTPUT_DIR = process.env.ENTRY_OUTPUT_DIR ?? "/output";
 const OUTPUT_FILE = join(OUTPUT_DIR, "entry.txt");
 
 function isSingleWord(text: string): boolean {
@@ -88,6 +91,17 @@ function main(): void {
       console.error(`invalid entry: ${problem}`);
     }
     process.exit(1);
+  }
+
+  // --dry-run validates the word against the gate and reports what
+  // would be written, without touching the output directory: useful
+  // for checking the entry on a machine where /output is not
+  // writable, without changing what the graded run writes.
+  if (process.argv.includes("--dry-run")) {
+    console.log(
+      `dry run: entry is valid, would write ${WORD.length}-character entry to ${OUTPUT_FILE}: ${WORD}`,
+    );
+    return;
   }
 
   mkdirSync(dirname(OUTPUT_FILE), { recursive: true });
